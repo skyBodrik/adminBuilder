@@ -1,0 +1,7 @@
+{
+  "templateName": "Template for FS(Fotostrana)",
+  "paths": {
+    "back": "./back",
+    "front": "./front"
+  }
+}
