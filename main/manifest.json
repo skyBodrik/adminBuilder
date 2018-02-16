@@ -1,0 +1,73 @@
+{
+	"adminBuilder": "ver.1",
+	"template": "fs",
+	"fieldsDescriptions": {
+		"!userId": {
+			"type": "int",
+			"displayAs": "textbox",
+			"params": {
+				"caption": "Индетифиактор пользователя"
+			}
+		},
+		"!userName": {
+			"type": "string",
+			"displayAs": "textbox",
+			"params": {
+				"caption": "Имя пользователя"
+			}
+		},
+		"!userPassword": {
+			"type": "string",
+			"displayAs": "password",
+			"params": {
+				"caption": "Пароль"
+			}
+		},
+		"!restrictiveLine": {
+			"displayAs": "br"
+		},
+		"!usersTable": {
+			"type": "array",
+			"displayAs": "table",
+			"params": {
+				"caption": "Список пользователей"
+			},
+			"content": [
+				"!userId",
+				"!userName",
+				"!usersPassword",
+				{
+					"type": "string",
+					"displayAs": "textbox",
+					"caption": "Email"
+				}
+			]
+		}
+	},
+	"actions": {
+		"@index": {
+			"inputFields": [
+				"!usersTable"
+			]
+		},
+		"@saveUser": {
+			"outputFields": [
+				"!userId",
+				"!userName",
+				"!userPassword"
+			]
+		}
+	},
+	"layout": {
+		"tabs": [
+			{
+				"caption": "Вкладка №1",
+				"content": [
+					"@index",
+					"!restrictiveLine",
+					"@saveUser"
+				]
+			}
+		]
+	}
+}

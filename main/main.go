@@ -6,5 +6,5 @@ import (
 
 
 func main() {
-	adminBuilder.Test();
+	adminBuilder.Run();
 }
