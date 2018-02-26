@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"encoding/json"
+	"crypto/md5"
+	"encoding/hex"
 )
 
 const END_OF_STR_CHARACTERS = "<strend>"
@@ -17,7 +19,7 @@ type Cmd struct {
 /**
  * Парсим PHPDoc
  */
-func RunPhpDocParser(strPhpDoc string) []Cmd {
+func RunPhpDocParser(strPhpDoc string) map[string]Cmd {
 	r0, _ := regexp.Compile("\n")
 	strPhpDoc = r0.ReplaceAllString(strPhpDoc, END_OF_STR_CHARACTERS)
 	r1, _ := regexp.Compile(`(?m:[*\s]+)`)
@@ -29,8 +31,9 @@ func RunPhpDocParser(strPhpDoc string) []Cmd {
 	r4, _ := regexp.Compile(`(?m:\s)`)
 	r5, _ := regexp.Compile(`(?m:[,;]` + END_OF_STR_CHARACTERS + `)`)
 	r6, _ := regexp.Compile(`(?m:\{)`)
-	r7, _ := regexp.Compile(`(?m:(\w*)\:)`)
-	var list = []Cmd{}
+	r7, _ := regexp.Compile(`(?m:(\w*)\:\s*([\"\d\[\{]))`)
+	r8, _ := regexp.Compile(`(?m:[,\s]+)`)
+	var list = map[string]Cmd{}
 	for _, group := range listCmdGroups {
 		//fmt.Println(group)
 		listCmd := r3.FindAllString(group, -1)
@@ -40,20 +43,25 @@ func RunPhpDocParser(strPhpDoc string) []Cmd {
 			parts := r4.Split(cmd, 2)
 			if len(parts) >= 2 {
 				partsOfParams := r6.Split(parts[1], 2)
+				h := md5.New()
 				//fmt.Println(parts[1])
 				if len(partsOfParams) >= 2 {
-					partsOfParams[1] = r7.ReplaceAllString(partsOfParams[1], "\"$1\":")
+					h.Write([]byte(parts[0] + ":" + partsOfParams[0]))
+					hashKey := h.Sum(nil)
+					partsOfParams[1] = r7.ReplaceAllString(partsOfParams[1], "\"$1\": $2")
 					var params interface{}
-					json.Unmarshal([]byte("{\"var\": \"" + partsOfParams[0] + "\", " + partsOfParams[1]), &params)
-					list = append(list, Cmd{
+					json.Unmarshal([]byte("{\"fieldName\": \"" + partsOfParams[0] + "\", " + partsOfParams[1]), &params)
+					list[hex.EncodeToString(hashKey)] = Cmd{
 						Name:   parts[0],
 						Params: params,
-					})
+					}
 				} else {
-					list = append(list, Cmd{
+					h.Write([]byte(parts[0]))
+					hashKey := h.Sum(nil)
+					list[hex.EncodeToString(hashKey)] = Cmd{
 						Name:   parts[0],
-						Params: r4.Split(partsOfParams[0], -1),
-					})
+						Params: r8.Split(partsOfParams[0], -1),
+					}
 				}
 				fmt.Println(list)
 			}

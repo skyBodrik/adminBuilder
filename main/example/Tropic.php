@@ -2,10 +2,9 @@
 
 /**
   * @adminBuilder
-  *     tab{name: "Первая вкладка"},
-  *     requestUrl "tropic/index.php",
-  *     snippetsPath "./stories",
-  *     outputPath "~/var/test.html";
+  *     page {name: "tropic", caption: "Админка тропических Историй"},
+  *     requestUrl "tropic",
+  *     snippetsPath "./stories";
   */
 class Story_Admin_Controller_Tropic extends Base_Controller_Admin
 {
@@ -26,11 +25,12 @@ class Story_Admin_Controller_Tropic extends Base_Controller_Admin
     /**
      *  Получить инфу о пользователе
      *  @adminBuilder
-     *      title "Информация о пользователе",
+     *      caption "Информация о пользователе",
      *      render on,
      *      in userId,
-     *      out userName{snippet: "textbox", caption: "Имя пользователя"},
-     *      out userPass{snippet: "textbox", caption: "Пароль"};
+     *      out userName{snippet: "textbox", type: "string", caption: "Имя пользователя"},
+     *      out userPass{snippet: "textbox", type: "string", caption: "Пароль"},
+     *      linkedActions setUserName, setUserName2;
      *  @adminBuilder test;
      **/
     public function getUserInfoAction()
@@ -40,6 +40,31 @@ class Story_Admin_Controller_Tropic extends Base_Controller_Admin
         return [
             'userName' => 'Игорь',
             'userPass' => '123',
+        ];
+    }
+
+    /**
+     *  Получить список пользователей
+     *  @adminBuilder
+     *      title "Информация о пользователе",
+     *      field users{snippet: "table", type: "array", caption: "Список пользователей", fields: ["userName", "userPass"]},
+     *      field userName{snippet: "textbox", type: "string", caption: "Имя пользователя"},
+     *      field userPass{snippet: "textbox", type: "string", caption: "Пароль"},
+     *      show users, users;
+     **/
+    public function listUsersAction()
+    {
+        return [
+            users => [
+                [
+                    'userName' => 'Игорь',
+                    'userPass' => '123',
+                ],
+                [
+                    'userName' => 'Олег',
+                    'userPass' => '204',
+                ],
+            ],
         ];
     }
 

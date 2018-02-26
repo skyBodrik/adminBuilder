@@ -10,6 +10,7 @@ import (
 	"github.com/z7zmey/php-parser/walker"
 	"github.com/z7zmey/php-parser/node/stmt"
 	"../parser"
+	"regexp"
 )
 
 var ActionList = []Action{}
@@ -26,8 +27,11 @@ func isWalkerImplementsNodeInterface(w walker.Walker) bool {
 
 func actionHandler(d Ast, m *stmt.ClassMethod, w walker.Walker) bool {
 	//fmt.Println(m.MethodName)
+	r0, _ := regexp.Compile(`(Action$)`)
 	methodName := (m.MethodName.Attributes()["Value"]).(string)
-	ActionList = append(ActionList, Action{methodName, parser.RunPhpDocParser(m.PhpDocComment)})
+	methodName = r0.ReplaceAllString(methodName, "")
+	cmdList := parser.RunPhpDocParser(m.PhpDocComment)
+	ActionList = append(ActionList, Action{methodName, cmdList})
 	//for i := range ActionList {
 	//	fmt.Println(i)
 	//}
@@ -42,7 +46,7 @@ func classHandler(d Ast, m *stmt.Class, w walker.Walker) bool {
 
 type Action struct {
 	ActionName string
-	Cmds []parser.Cmd
+	Cmds map[string]parser.Cmd
 }
 
 
