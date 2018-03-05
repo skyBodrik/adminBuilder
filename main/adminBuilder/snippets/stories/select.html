@@ -1,0 +1,7 @@
+{{define "select"}}
+    <select id="{{ ._id }}" class="form-control">
+        {{ range $key, $value := .values }}
+            <option value="{{ $key }}">{{ $value }}</option>
+        {{end}}
+    </select>
+{{end}}

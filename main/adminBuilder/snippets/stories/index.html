@@ -17,7 +17,80 @@
 
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/jquery/jquery.min.js'); ?>
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/bootstrap/js/bootstrap.min.js'); ?>
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/metisMenu/metisMenu.min.js'); ?>
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables/js/jquery.dataTables.min.js'); ?>
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables-plugins/dataTables.bootstrap.min.js'); ?>
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables-responsive/dataTables.responsive.js'); ?>
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/dist/js/url.js'); ?>
+    <script>
+        var idCounters = [];
+
+        function getDataForFieldsByButtonId(fields, buttonId) {
+            var regex = new RegExp(/(.+_)([^_]+)(\-\d+)$/i);
+            var fieldsData = {}
+            for (i in fields) {
+                let fieldId = buttonId.replace(regex, '$1' + fields[i] + '$3');
+                fieldsData[fields[i]] = $('#' + fieldId).val();
+            }
+            return fieldsData;
+        }
+
+        function transformToHtml(data, fullId, fieldsDescription) {
+            var transformOutput = '';
+            var regex = new RegExp(/([^_]+)\-(\d+)$/i);
+            var id = regex.exec(fullId)[1];
+            var order = regex.exec(fullId)[2];
+            if (fieldsDescription[id] !== undefined && fieldsDescription[id]['type'] == 'array') {
+                let fieldsNameList = fieldsDescription[id]['fields'];
+                for (let key in data) {
+                    transformOutput += '<tr name="' + fullId + '_tr_' + key + '">';
+                    for (let i in fieldsNameList) {
+                        let key2 = fieldsNameList[i];
+                        transformOutput += '<td name="' + fullId + '_td_' + key + '_' + i + '">';
+                        // console.log(key2);
+                        // console.log(transformOutput);
+                        if (key2 instanceof Object) {
+                            let subFieldsNameList = key2;
+                            let items = [];
+                            for (let j in subFieldsNameList) {
+                                let key3 = subFieldsNameList[j];
+                                if (typeof idCounters[key3] === 'undefined') {
+                                    idCounters[key3] = 0;
+                                }
+                                let newFullId = fullId + '_' + key3 + '-' + (idCounters[key3]++) + '';
+                                items.push(transformToHtml(data[key][key3], newFullId, fieldsDescription));
+                            }
+                            transformOutput += items.join(' / ');
+                        } else {
+                            if (typeof idCounters[key2] === 'undefined') {
+                                idCounters[key2] = 0;
+                            }
+                            let newFullId = fullId + '_' + key2 + '-' + (idCounters[key2]++) + '';
+                            transformOutput += transformToHtml(data[key][key2], newFullId, fieldsDescription);
+                        }
+                        transformOutput += '</td>';
+                    }
+                    transformOutput += '</tr>';
+                }
+            } else if (data instanceof Object) {
+                for (let key in data) {
+                    let newFullId = fullId + '_' + key;
+                    transformOutput += transformToHtml(data[key], newFullId, fieldsDescription);
+                }
+            } else {
+                switch (fieldsDescription[id]['snippet']) {
+                {{ range $snippetName, $content := .usedSnippets }}
+                    case '{{ $snippetName }}':
+                        transformOutput += "{{ JSEscape $content }}".replace(/\{\{\s*\.value\s*\}\}/ig, data).replace(/\{\{\s*\.id\s*\}\}/ig, fullId);
+                        break;
+                {{end}}
+                    default:
+                        transformOutput += data;
+                }
+            }
+            return transformOutput;
+        }
+    </script>
 </head>
 <body>
     <div id="wrapper">
@@ -97,18 +170,14 @@
     </div>
     <!-- /#wrapper -->
 
-    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/metisMenu/metisMenu.min.js'); ?>
-    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables/js/jquery.dataTables.min.js'); ?>
-    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables-plugins/dataTables.bootstrap.min.js'); ?>
-    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables-responsive/dataTables.responsive.js'); ?>
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/dist/js/sb-admin-2.js'); ?>
 
     <!-- Page-Level Demo Scripts - Tables - Use for reference -->
     <script>
         $(document).ready(function() {
-            $('#dataTables-example').DataTable({
-                responsive: true
-            });
+            // $('#dataTables-example').DataTable({
+            //     responsive: true
+            // });
         });
     </script>
 </body>

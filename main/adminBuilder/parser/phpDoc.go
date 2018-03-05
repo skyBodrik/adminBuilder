@@ -50,7 +50,7 @@ func RunPhpDocParser(strPhpDoc string) map[string]Cmd {
 					hashKey := h.Sum(nil)
 					partsOfParams[1] = r7.ReplaceAllString(partsOfParams[1], "\"$1\": $2")
 					var params interface{}
-					json.Unmarshal([]byte("{\"fieldName\": \"" + partsOfParams[0] + "\", " + partsOfParams[1]), &params)
+					json.Unmarshal([]byte("{\"_fieldName\": \"" + partsOfParams[0] + "\", " + partsOfParams[1]), &params)
 					list[hex.EncodeToString(hashKey)] = Cmd{
 						Name:   parts[0],
 						Params: params,

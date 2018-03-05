@@ -1,1 +1,3 @@
-<input type="textbox" name="$fieldName" value="$value">
+{{define "textbox"}}
+<input type="textbox" id="{{ ._id }}" value="{{ ._value }}">
+{{end}}
