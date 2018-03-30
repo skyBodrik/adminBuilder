@@ -1,37 +1,19 @@
-{{define "button"}}
-    <button type="button" id="{{ ._id }}" name="{{ ._fieldName }}" class="btn btn-default">{{ .caption }}</button>
+{{define "stories/button"}}
+    <button type="button" id="{{ ._id }}" name="{{ ._fieldName }}" class="btn {{if eq (ifExists .confirm) ""}}btn-default{{else}}btn-warning{{end}}">{{ .caption }}</button>
     <script>
-            $('#{{ ._id }}').on("click", function () {
-                let fields = {{ JSON .fields }};
-
-                let url = "{{ URL .url }}";
-                var regex = new RegExp(/^\w:\/\/.+$/i);
-                if (!regex.test(url)) {
-                    let currentUrl = Url.getPath(location.href);
-                    if (currentUrl.slice(-1) == url.slice(0, 1) && url.slice(0, 1) == "/") {
-                        url = currentUrl.slice(0, currentUrl.length - 1) + url;
-                    } else {
-                        url = currentUrl + url;
-                    }
+        {{ if eq .type "jsHandler" }}
+            adminBuilder.jsHandlers['{{ ._fullFieldName }}'] = function (dateTimeFieldId) {
+                let time = $('#' + dateTimeFieldId).val();
+                if (time.length) {
+                    var minutes = 60; // Время хранения кук
+                    $.cookie('time_machine', time, { expires: minutes * 60 * 1000, path: '/'});
+                    alert('Машина времени активирована');
+                } else {
+                    $.removeCookie('time_machine', { path: '/'});
+                    alert('Машина времени деактивирована');
                 }
-                url += Url.getQuery(location.href) == '' ? '?_ajax=1' : '?_ajax=1&' + Url.getQuery(location.href);
-
-                $.ajax({
-                    url: url,
-                    method: "POST",
-                    data: getDataForFieldsByButtonId(fields, $(this).attr('id')),
-                    dataType: "json",
-                    success: function(data) {
-                        if (data['status'] === null) {
-                            {{/*var buff = transformToHtml(data['data']['{{ ._fieldName }}'], '{{ ._fullFieldName }}', fieldsDescription);*/}}
-                            {{/*$('[name="{{ ._fullFieldName }}"] > .dinamic-content').append(buff);*/}}
-                            {{/*$('[name="{{ ._fullFieldName }}"]').DataTable({*/}}
-                                {{/*responsive: true,*/}}
-                            {{/*});*/}}
-                        }
-                        console.log(data);
-                    }
-                });
-            });
+            }
+        {{end}}
     </script>
+    {{template "core/button" .}}
 {{end}}

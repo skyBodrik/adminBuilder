@@ -1,0 +1,15 @@
+{{define "stories/ptabs"}}
+    <div width="100%" id="{{ ._fullFieldName }}">
+        <ul class="nav nav-pills">
+            {{ range $key, $value := ._columnTitles }}
+                <li {{if eq $key 0}} class="active" {{end}}>
+                    <a href="#{{ $._actionName }}-{{ $key }}" data-toggle="tab" aria-expanded="true">{{ $value }}</a>
+                </li>
+            {{end}}
+        </ul>
+        <div class="tab-content dynamic-content">
+
+        </div>
+    </div>
+    {{template "core/tabs" .}}
+{{end}}

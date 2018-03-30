@@ -1,0 +1,44 @@
+{{define "core/union"}}
+    {{ if ._withLoadDataScript }}
+        <script>
+            $(function() {
+                /*                adminBuilder.setDataHandler('{{ ._fullFieldName }}', function () {
+                                return "test";
+                            });*/
+
+                adminBuilder.setActionUpdateDataHandler('{{ ._actionName }}', function () {
+                    let fieldsDescription = {{ JSON ._fieldsDescription }};
+                    let params = Url.parseQuery(Url.getQuery(location.href));
+                    let preparedParams = [];
+                    for (let i in params) {
+                        preparedParams['glob_' + i] = params[i];
+                    }
+
+                    let prepareList = [];
+                    preparedParams['_ajax'] = 1;
+                    for (let i in preparedParams) {
+                        prepareList.push(i + '=' + preparedParams[i]);
+                    }
+                    $.ajax({
+                        url: "{{ URL ._initUrl }}",
+                        method: "POST",
+                        data: prepareList.join('&'),
+                        dataType: "json",
+                        success: function(data) {
+                            data = data['data'];
+                            if (data[adminBuilder.RESPONSE_FIELD] === undefined || data[adminBuilder.RESPONSE_FIELD]['status'] === undefined || data[adminBuilder.RESPONSE_FIELD]['status'] != 1) { // Успех
+                                var buff = adminBuilder.transformToHtml(data, '{{ ._fullFieldName }}', fieldsDescription);
+                                $('#{{ ._fullFieldName }} > .dynamic-content').empty();
+                                $('#{{ ._fullFieldName }} > .dynamic-content').append(buff);
+                                adminBuilder.setActionLoadingStatus('{{ ._actionName }}', true);
+                            } else { // Неудача
+                                console.log(data);
+                            }
+                        }
+                    });
+                });
+                console.log(adminBuilder.updateActionData('{{ ._actionName }}'));
+            });
+        </script>
+    {{end}}
+{{end}}

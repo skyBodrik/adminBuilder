@@ -1,0 +1,10 @@
+{{define "stories/number"}}
+    {{ if ._withLoadDataScript }}
+        <div class="form-group">
+            <label style="{{ ifExists .labelStyle }}">{{ ifExists .caption }} </label>
+    {{ end }}
+        <input type="number" id="{{ ._id }}" value="{{ ._value }}">
+    {{ if ._withLoadDataScript }}
+        </div>
+    {{ end }}
+{{end}}

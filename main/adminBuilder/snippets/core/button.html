@@ -1,0 +1,102 @@
+{{define "core/button"}}
+<script>
+    $('#{{ ._id }}').on("click", function () {
+        let fields = {{ JSON .fields }};
+
+        let url = "{{ ifExists .url }}";
+        let regex = new RegExp(/^\w:\/\/.+$/i);
+        if (!regex.test(url)) {
+            let currentUrl = Url.getPath(location.href);
+            let regex2 = new RegExp(/#.*$/ig);
+            currentUrl = currentUrl.replace(regex2, '');
+            if (currentUrl.slice(-1) == url.slice(0, 1) && url.slice(0, 1) == "/") {
+                url = currentUrl.slice(0, currentUrl.length - 1) + url;
+            } else {
+                url = currentUrl + url;
+            }
+        }
+
+        let params = Url.parseQuery(Url.getQuery(location.href));
+        let preparedParams = [];
+        for (let i in params) {
+            preparedParams['glob_' + i] = params[i];
+        }
+
+        let prepareList = [];
+
+        let answer = true;
+        let confirmText = '{{ ifExists .confirm }}';
+        if (confirmText) {
+            answer = confirm(confirmText);
+        }
+        if (answer) {
+            switch ('{{ .type }}') {
+                case 'ajax':
+                    preparedParams['_ajax'] = 1;
+                    preparedParams = Object.assign(preparedParams, adminBuilder.getDataForFieldsByButtonId(fields, $(this).attr('id')));
+                    for (let i in preparedParams) {
+                        prepareList.push(i + '=' + preparedParams[i]);
+                    }
+                    $.ajax({
+                        url: url,
+                        method: "POST",
+                        data: prepareList.join('&'),
+                        dataType: "json",
+                        success: (data) => {
+                            data = data['data'];
+                            let affectedObject = $(adminBuilder.getAffectedElement($(this).attr('id')));
+                            affectedObject.addClass('animate');
+                            if (data['adminBuilder'] === undefined || data['adminBuilder']['status'] === undefined || data['adminBuilder']['status'] != 1) { // Успех
+                                affectedObject.addClass('status-success');
+                                setTimeout(() => {
+                                    affectedObject.removeClass('status-success');
+                                }, 2000);
+                                if (data['adminBuilder'] !== undefined) {
+                                    for (let prop in data['adminBuilder']) {
+                                        switch (prop) {
+                                            case 'update':
+                                                if (data['adminBuilder']['update']) {
+                                                    adminBuilder.updateActionData('{{ ._actionName }}');
+                                                }
+                                                break;
+                                        }
+                                    }
+                                }
+                            } else { // Неудача
+                                affectedObject.addClass('status-fail');
+                                setTimeout(() => {
+                                    affectedObject.removeClass('status-fail');
+                                }, 2000);
+                            }
+                        },
+                        error: (err) => {
+                            let affectedObject = $(adminBuilder.getAffectedElement($(this).attr('id')));
+                            affectedObject.addClass('status-fail');
+                            setTimeout(() => {
+                                affectedObject.removeClass('status-fail');
+                            }, 2000);
+                            console.log(err);
+                        }
+                    });
+                    break;
+                case 'jsHandler':
+                    if (adminBuilder.jsHandlers.hasOwnProperty('{{ ._fullFieldName }}')) {
+                        let ids = adminBuilder.getFullIdsForFieldsByButtonId(fields, $(this).attr('id'))
+                        adminBuilder.jsHandlers['{{ ._fullFieldName }}'](...Object.values(ids));
+                    }
+                    break;
+                case 'link':
+                default:
+                    let fieldsList = adminBuilder.getDataForFieldsByButtonId(fields, $(this).attr('id'));
+                    for (let i in fieldsList) {
+                        prepareList.push(i + '=' + fieldsList[i]);
+                    }
+                    if (prepareList.length > 0) {
+                        url += '?' + prepareList.join('&');
+                    }
+                    location.href = url;
+            }
+        }
+    });
+</script>
+{{end}}

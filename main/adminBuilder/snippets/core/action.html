@@ -1,0 +1,22 @@
+{{define "core/action"}}
+    {{ if ._beforeRender }}
+    <script>
+        adminBuilder.setActionLoadingStatus('{{ ._actionName }}', false);
+    </script>
+    <a name="{{ ._actionName }}"></a>
+    <!-- /.row -->
+        <div class="row" name="actionRow_{{ ._actionName }}" style="margin-top: 10px">
+            <div class="col-lg-12">
+                <div name="actionPanel_{{ ._actionName }}" class="panel panel-default">
+                    <div class="panel-heading">
+                        {{ ._actionTitle }}
+                    </div>
+                    <!-- /.panel-heading -->
+                    <div class="panel-body">
+                        {{ else }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {{end}}
+{{end}}

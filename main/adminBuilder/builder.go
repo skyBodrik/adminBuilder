@@ -16,8 +16,9 @@ import (
 func Run()  {
 	fdInput, _ := os.Open("/home/bodrik/repo/fotostrana/fotostrana/App/Story/Admin/Controller/SpringX.php")//"/root/GolandProjects/adminBuilder/main/example/Tropic.php")
 	fileInfo, _ := fdInput.Stat()
-	var encode string
+	var encode, output string
 	flag.StringVar(&encode, "encode", "utf-8", "a string var")
+	flag.StringVar(&output, "output", "output", "a string var")
 	flag.Parse()
 	var rawData []byte
 	var err error
@@ -40,7 +41,8 @@ func Run()  {
 	}
 	nodes.Walk(visitor)
 	builder := builders.Builder{
-		SnippetsPath:  "/root/GolandProjects/adminBuilder/main/adminBuilder/snippets/stories/",
+		SnippetsPath:  "main/adminBuilder/snippets/*/",
+		OutputPath: output,
 		Charset: "utf-8",
 	}
 	builder.Build(visitor)

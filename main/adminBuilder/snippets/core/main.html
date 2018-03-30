@@ -1,0 +1,248 @@
+{{define "core/main"}}
+    <script>
+        function AdminBuilder() {
+            this.RESPONSE_FIELD = 'adminBuilder';
+
+            this.idCounters = [];
+            this.dataHandlerStorage = [];
+            this.actionLoadingStatuses = {};
+            this.jsHandlers = {};
+            this.eventHandlers = {};
+            this.actionUpdateDataHandlers = {};
+
+            this.setDataHandler = function(id, callback) {
+                this.dataHandlerStorage[id] = callback;
+            }
+
+            this.getDataHandler = function(id) {
+                return this.dataHandlerStorage[id];
+            }
+            
+            this.setActionLoadingStatus = function (actionName, status) {
+                this.actionLoadingStatuses[actionName] = status;
+                if (status == true && this.isAllActionLoaded() && this.eventHandlers['allActionLoadedHandler'] instanceof Object) {
+                    this.eventHandlers['allActionLoadedHandler']();
+                }
+            }
+
+            this.setActionUpdateDataHandler = function (actionName, handler) {
+                this.actionUpdateDataHandlers[actionName] = handler;
+            }
+
+            this.updateActionData = function (actionName) {
+                if (this.actionUpdateDataHandlers[actionName] instanceof Object) {
+                    return this.actionUpdateDataHandlers[actionName]();
+                }
+                return false;
+            }
+
+
+            this.setAllActionLoadedHandler = function (handler) {
+                this.eventHandlers['allActionLoadedHandler'] = handler;
+            }
+
+            this.isAllActionLoaded = function () {
+                for (let i in this.actionLoadingStatuses) {
+                    if (!this.actionLoadingStatuses[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            this.getAffectedElement = function (buttonId) {
+                let regex = new RegExp(/(.+)_([^_]+)\-(\d+)$/i);
+                let partFieldId = buttonId.replace(regex, '$1');
+                let selectors = [
+                    'tr[name^="' + partFieldId + '"]',
+                    '.panel',
+                ];
+                for (let i in selectors) {
+                    if ($('#' + buttonId).parents(selectors[i]).length) {
+                        return $('#' + buttonId).parents(selectors[i])[0];
+                    }
+                }
+                return null;
+            }
+
+            this.getDataForFieldsByButtonId = function (fields, buttonId) {
+                let regex = new RegExp(/(.+_)([^_]+)\-(\d+)$/i);
+                let fieldsData = {}
+                for (i in fields) {
+                    let fieldId = buttonId.replace(regex, '$1' + fields[i] + '-$3');
+                    let handler = this.getDataHandler(fieldId);
+                    if (typeof handler === 'undefined') {
+                        switch ($('#' + fieldId)[0].tagName) {
+                            case 'TABLE':
+                                $('input[id^="' + fieldId + '"]').each(function (index, obj) {
+                                    let fullId = $(obj).attr('id');
+                                    let fieldName = fullId.replace(regex, '$2');
+                                    let fieldCounter = fullId.replace(regex, '$3');
+                                    fieldsData[fieldName + '[' + fieldCounter + ']'] = $(obj).val()
+                                });
+                                break;
+                            default:
+                                if (fields instanceof Array) {
+                                    fieldsData[fields[i]] = $('#' + fieldId).val();
+                                } else {
+                                    fieldsData[i] = $('#' + fieldId).val();
+                                }
+                        }
+                    } else {
+                        if (fields instanceof Array) {
+                            fieldsData[fields[i]] = handler();
+                        } else {
+                            fieldsData[i] = handler();
+                        }
+                    }
+                }
+                return fieldsData;
+            }
+
+            this.getFullIdsForFieldsByButtonId = function (fields, buttonId) {
+                let regex = new RegExp(/(.+_)([^_]+)\-(\d+)$/i);
+                let fieldsIds = {}
+                for (i in fields) {
+                    let fieldId = buttonId.replace(regex, '$1' + fields[i] + '-$3');
+                    fieldsIds[fields[i]] = fieldId;
+                }
+                return fieldsIds;
+            }
+
+            this.transformToHtml = function(data, fullId, fieldsDescription) {
+                let transformOutput = '';
+                let regex = new RegExp(/^([^_]+).*?([^_]+)\-(\d+)$/i);
+                let actionName = regex.exec(fullId)[1];
+                let id = regex.exec(fullId)[2];
+                let order = regex.exec(fullId)[3];
+                let actionNameAndId = actionName + '_' + id;
+                if (fieldsDescription[id] !== undefined && fieldsDescription[id]['type'] == 'array') {
+                    let fieldsNameList = fieldsDescription[id]['fields'];
+                    for (let key in data) {
+                        transformOutput += '<tr name="' + fullId + '_tr-' + key + '">';
+                        for (let i in fieldsNameList) {
+                            let key2 = fieldsNameList[i];
+                            transformOutput += '<td name="' + fullId + '_tr-' + key + '_td-' + i + '">';
+                            // console.log(key2);
+                            // console.log(transformOutput);
+                            if (key2 instanceof Object) {
+                                let subFieldsNameList = key2;
+                                let items = [];
+                                for (let j in subFieldsNameList) {
+                                    let key3 = subFieldsNameList[j];
+                                    let partOfId = fullId + '_' + key3;
+                                    if (typeof this.idCounters[partOfId] === 'undefined') {
+                                        this.idCounters[partOfId] = 0;
+                                    }
+                                    let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
+                                    this.idCounters[partOfId]++;
+                                    items.push(this.transformToHtml(data[key][key3], newFullId, fieldsDescription));
+                                }
+                                transformOutput += items.join(' / ');
+                            } else {
+                                let partOfId = fullId + '_' + key2;
+                                if (typeof this.idCounters[partOfId] === 'undefined') {
+                                    this.idCounters[partOfId] = 0;
+                                }
+                                let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
+                                this.idCounters[partOfId]++;
+                                transformOutput += this.transformToHtml(data[key][key2], newFullId, fieldsDescription);
+                            }
+                            transformOutput += '</td>';
+                        }
+                        transformOutput += '</tr>';
+                    }
+                } else if (fieldsDescription[id] !== undefined && fieldsDescription[id]['type'] == 'union') {
+                    let fieldsNameList = fieldsDescription[id]['fields'];
+                    for (let i in fieldsNameList) {
+                        let key = fieldsNameList[i];
+                        transformOutput += '<div name="' + fullId + '_' + key + '">';
+                        if (key instanceof Object) {
+                            let subFieldsNameList = key;
+                            let items = [];
+                            for (let j in subFieldsNameList) {
+                                let key2 = subFieldsNameList[j];
+                                let partOfId = fullId + '_' + key2;
+                                if (typeof this.idCounters[partOfId] === 'undefined') {
+                                    this.idCounters[partOfId] = 0;
+                                }
+                                let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
+                                this.idCounters[partOfId]++;
+                                items.push(this.transformToHtml(data[key2], newFullId, fieldsDescription));
+                            }
+                            transformOutput += items.join(' ');
+                        } else {
+                            let partOfId = fullId + '_' + key;
+                            if (typeof this.idCounters[partOfId] === 'undefined') {
+                                this.idCounters[partOfId] = 0;
+                            }
+                            let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
+                            this.idCounters[partOfId]++;
+                            if (data.hasOwnProperty(key)) {
+                                transformOutput += this.transformToHtml(data[key], newFullId, fieldsDescription);
+                            } else {
+                                transformOutput += this.transformToHtml(data, newFullId, fieldsDescription);
+                            }
+                        }
+                        transformOutput += '</div>';
+                    }
+                } else  if (fieldsDescription[id] !== undefined && fieldsDescription[id]['type'] == 'tabs') {
+                    let fieldsNameList = fieldsDescription[id]['fields'];
+                    for (let i in fieldsNameList) {
+                        let key = fieldsNameList[i];
+                        transformOutput += '<div class="tab-pane fade" id="' + actionName + '-' + i + '" name="' + fullId + '_' + key + '">';
+                        transformOutput += '<h4>' + fieldsDescription[id]['_columnTitles'][i] + '</h4>';
+                        let partOfId = fullId + '_' + key;
+                        if (typeof this.idCounters[partOfId] === 'undefined') {
+                            this.idCounters[partOfId] = 0;
+                        }
+                        let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
+                        this.idCounters[partOfId]++;
+                        if (data.hasOwnProperty(key)) {
+                            transformOutput += this.transformToHtml(data[key], newFullId, fieldsDescription);
+                        } else {
+                            transformOutput += this.transformToHtml(data, newFullId, fieldsDescription);
+                        }
+                        transformOutput += '</div>';
+                    }
+                } else /*if (data instanceof Object) {
+                    for (let key in data) {
+                        let partOfId = fullId + '_' + key;
+                        if (typeof this.idCounters[partOfId] === 'undefined') {
+                            this.idCounters[partOfId] = 0;
+                        }
+                        let newFullId = partOfId + '-' + this.idCounters[partOfId];
+                        transformOutput += this.transformToHtml(data[key], newFullId, fieldsDescription);
+                    }
+                } else */{
+                    let cachedSnippedKey = (fieldsDescription[id]['_withLoadDataScript'] ? 'withLoadDataScript:' : '') + fieldsDescription[id]['_fullFieldName'];
+                    switch (cachedSnippedKey) {
+                    {{ range $fieldName, $content := .templatesList }}
+                        case '{{ $fieldName }}':
+                            //transformOutput += "{{ JSEscape $content }}".replace(/\{\{\s*\.\_value\s*\}\}/ig, data).replace(/\{\{\s*\.\_id\s*\}\}/ig, fullId);
+                            transformOutput += "{{ JSEscape $content }}".replace(new RegExp('\\{\\{\\s*\\._value_' + actionNameAndId + '\\s*\\}\\}', 'ig'), data)
+                                    .replace(new RegExp('\\{\\{\\s*\\._id_' + actionNameAndId + '\\s*\\}\\}', 'ig'), fullId);
+                            break;
+                    {{end}}
+                        default:
+                            transformOutput += data;
+                    }
+                }
+                return transformOutput;
+            }
+
+            /**
+             * Для обновления состояния полей
+             */
+            this.renderPage = function() {
+                $('select').each(function (index, obj) {
+                    let value = $(obj).data('value');
+                    $(obj).val(value);
+                });
+            }
+        }
+
+        let adminBuilder = new AdminBuilder();
+    </script>
+    {{template "pageContent" .}}
+{{end}}

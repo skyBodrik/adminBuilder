@@ -1,3 +1,10 @@
-{{define "label"}}
-    <input type="hidden" id="{{ ._id }}" value="{{ ._value }}">{{ ._value }}
+{{define "stories/label"}}
+    {{ if ._withLoadDataScript }}
+    <div class="form-group">
+        <label style="{{ ifExists .labelStyle }}">{{ ifExists .caption }} </label>
+    {{ end }}
+        <input type="hidden" id="{{ ._id }}" value="{{ ._value }}">{{ ._value }}
+    {{ if ._withLoadDataScript }}
+        </div>
+    {{ end }}
 {{end}}

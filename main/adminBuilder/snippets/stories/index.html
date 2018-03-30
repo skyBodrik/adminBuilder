@@ -1,4 +1,4 @@
-{{define "index"}}<!DOCTYPE html>
+{{define "stories/index"}}<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -13,173 +13,75 @@
     <?= Base_Renderer::getInstance()->styleFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables-plugins/dataTables.bootstrap.css'); ?>
     <?= Base_Renderer::getInstance()->styleFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables-responsive/dataTables.responsive.css'); ?>
     <?= Base_Renderer::getInstance()->styleFile(STATIC_TYPE_BASE, '/app/stories/admin/dist/css/sb-admin-2.css'); ?>
+    <?= Base_Renderer::getInstance()->styleFile(STATIC_TYPE_BASE, '/app/stories/admin/dist/css/main.css'); ?>
     <?= Base_Renderer::getInstance()->styleFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/font-awesome/css/font-awesome.min.css'); ?>
 
-    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/jquery/jquery.min.js'); ?>
+    <?= @Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/js/underscore-min.js') ?>
+    <?= @Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE,'/js/backbone-min.js') ?>
+    <!-- jQuery 2.1.3 -->
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/js/jquery-2.1.3.min.js') ?>
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/js/init.js') ?>
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/js/lang/ru.js') ?>
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/js/new/base.js') ?>
+
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/bootstrap/js/bootstrap.min.js'); ?>
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/metisMenu/metisMenu.min.js'); ?>
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables/js/jquery.dataTables.min.js'); ?>
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables-plugins/dataTables.bootstrap.min.js'); ?>
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/vendor/datatables-responsive/dataTables.responsive.js'); ?>
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/dist/js/url.js'); ?>
-    <script>
-        var idCounters = [];
 
-        function getDataForFieldsByButtonId(fields, buttonId) {
-            var regex = new RegExp(/(.+_)([^_]+)(\-\d+)$/i);
-            var fieldsData = {}
-            for (i in fields) {
-                let fieldId = buttonId.replace(regex, '$1' + fields[i] + '$3');
-                fieldsData[fields[i]] = $('#' + fieldId).val();
-            }
-            return fieldsData;
-        }
-
-        function transformToHtml(data, fullId, fieldsDescription) {
-            var transformOutput = '';
-            var regex = new RegExp(/([^_]+)\-(\d+)$/i);
-            var id = regex.exec(fullId)[1];
-            var order = regex.exec(fullId)[2];
-            if (fieldsDescription[id] !== undefined && fieldsDescription[id]['type'] == 'array') {
-                let fieldsNameList = fieldsDescription[id]['fields'];
-                for (let key in data) {
-                    transformOutput += '<tr name="' + fullId + '_tr_' + key + '">';
-                    for (let i in fieldsNameList) {
-                        let key2 = fieldsNameList[i];
-                        transformOutput += '<td name="' + fullId + '_td_' + key + '_' + i + '">';
-                        // console.log(key2);
-                        // console.log(transformOutput);
-                        if (key2 instanceof Object) {
-                            let subFieldsNameList = key2;
-                            let items = [];
-                            for (let j in subFieldsNameList) {
-                                let key3 = subFieldsNameList[j];
-                                if (typeof idCounters[key3] === 'undefined') {
-                                    idCounters[key3] = 0;
-                                }
-                                let newFullId = fullId + '_' + key3 + '-' + (idCounters[key3]++) + '';
-                                items.push(transformToHtml(data[key][key3], newFullId, fieldsDescription));
-                            }
-                            transformOutput += items.join(' / ');
-                        } else {
-                            if (typeof idCounters[key2] === 'undefined') {
-                                idCounters[key2] = 0;
-                            }
-                            let newFullId = fullId + '_' + key2 + '-' + (idCounters[key2]++) + '';
-                            transformOutput += transformToHtml(data[key][key2], newFullId, fieldsDescription);
-                        }
-                        transformOutput += '</td>';
-                    }
-                    transformOutput += '</tr>';
-                }
-            } else if (data instanceof Object) {
-                for (let key in data) {
-                    let newFullId = fullId + '_' + key;
-                    transformOutput += transformToHtml(data[key], newFullId, fieldsDescription);
-                }
-            } else {
-                switch (fieldsDescription[id]['snippet']) {
-                {{ range $snippetName, $content := .usedSnippets }}
-                    case '{{ $snippetName }}':
-                        transformOutput += "{{ JSEscape $content }}".replace(/\{\{\s*\.value\s*\}\}/ig, data).replace(/\{\{\s*\.id\s*\}\}/ig, fullId);
-                        break;
-                {{end}}
-                    default:
-                        transformOutput += data;
-                }
-            }
-            return transformOutput;
-        }
-    </script>
+    <!-- jQuery Cookie -->
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/js/libs/admin_lte/plugins/jquerycookie/jquery.cookie.js') ?>
+    <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/js/libs/jquery.ajax.form.js') ?>
 </head>
 <body>
     <div id="wrapper">
-
-        <!-- Navigation -->
-        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="index.html">{{ .pageCaption }}</a>
-            </div>
-
-            <div class="navbar-default sidebar" role="navigation">
+            <div class="navbar-default sidebar" role="navigation" style="position: fixed; margin-top: 0px;">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
-                        <li>
-                            <a href="forms.html"><i class="fa fa-edit fa-fw"></i> Forms</a>
-                        </li>
-                        <li>
-                            <a href="#"><i class="fa fa-wrench fa-fw"></i> UI Elements<span class="fa arrow"></span></a>
-                            <ul class="nav nav-second-level">
-                                <li>
-                                    <a href="panels-wells.html">Panels and Wells</a>
-                                </li>
-                                <li>
-                                    <a href="buttons.html">Buttons</a>
-                                </li>
-                                <li>
-                                    <a href="notifications.html">Notifications</a>
-                                </li>
-                                <li>
-                                    <a href="typography.html">Typography</a>
-                                </li>
-                                <li>
-                                    <a href="icons.html"> Icons</a>
-                                </li>
-                                <li>
-                                    <a href="grid.html">Grid</a>
-                                </li>
-                            </ul>
-                            <!-- /.nav-second-level -->
-                        </li>
-                        <li>
-                            <a href="#"><i class="fa fa-files-o fa-fw"></i> Sample Pages<span class="fa arrow"></span></a>
-                            <ul class="nav nav-second-level">
-                                <li>
-                                    <a href="blank.html">Blank Page</a>
-                                </li>
-                                <li>
-                                    <a href="login.html">Login Page</a>
-                                </li>
-                            </ul>
-                            <!-- /.nav-second-level -->
-                        </li>
+                        {{ range $sectionName, $sectionContent := .menuSections }}
+                            <li>
+                                {{ if checkType $sectionContent "map[string]string" }}
+                                    <a href="#"><i class="fa fa-folder fa-fw"></i> {{ $sectionName }}<span class="fa arrow"></span></a>
+                                    <ul class="nav nav-second-level">
+
+                                    {{ range $actionName, $actionTitle := $sectionContent }}
+                                        <li>
+                                            <a href="{{ $actionName }}"> {{ $actionTitle }}</a>
+                                        </li>
+                                    {{ end }}
+                                    </ul>
+                                {{ else }}
+                                    <a href="#{{ $sectionContent }}"><i class="fa fa-edit fa-fw"></i> {{ $sectionName }}</a>
+                                {{ end }}
+                            </li>
+                        {{end}}
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->
             </div>
-            <!-- /.navbar-static-side -->
-        </nav>
 
-        <div id="page-wrapper">
+        <div id="page-wrapper" style="display: none;">
             <div class="row">
                 <div class="col-lg-12">
-                    <br>
+                    <h1 class="navbar-brand" style="margin: 5px 0px">{{ .pageCaption }}</h1>
                 </div>
                 <!-- /.col-lg-12 -->
             </div>
-            {{template "bodyContent"}}
+            {{template "bodyContent" .}}
         </div>
+        <script>
+            adminBuilder.setAllActionLoadedHandler(function () {
+                $('#page-wrapper').fadeIn();
+            });
+        </script>
         <!-- /#page-wrapper -->
 
     </div>
     <!-- /#wrapper -->
 
     <?= Base_Renderer::getInstance()->scriptFile(STATIC_TYPE_BASE, '/app/stories/admin/dist/js/sb-admin-2.js'); ?>
-
-    <!-- Page-Level Demo Scripts - Tables - Use for reference -->
-    <script>
-        $(document).ready(function() {
-            // $('#dataTables-example').DataTable({
-            //     responsive: true
-            // });
-        });
-    </script>
 </body>
 </html>
 {{end}}

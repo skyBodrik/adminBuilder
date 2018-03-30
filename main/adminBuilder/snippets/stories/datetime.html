@@ -1,9 +1,9 @@
-{{define "stories/textbox"}}
+{{define "stories/datetime"}}
     {{ if ._withLoadDataScript }}
     <div class="form-group">
         <label style="{{ ifExists .labelStyle }}">{{ ifExists .caption }} </label>
     {{ end }}
-        <input type="textbox" id="{{ ._id }}" value="{{ ._value }}">
+        <input type="datetime-local" id="{{ ._id }}" value="{{ ._value }}">
     {{ if ._withLoadDataScript }}
     </div>
     {{ end }}

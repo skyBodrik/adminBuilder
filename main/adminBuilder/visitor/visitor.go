@@ -31,7 +31,7 @@ func actionHandler(d Ast, m *stmt.ClassMethod, w walker.Walker) bool {
 	methodName := (m.MethodName.Attributes()["Value"]).(string)
 	methodName = r0.ReplaceAllString(methodName, "")
 	cmdList := parser.RunPhpDocParser(m.PhpDocComment)
-	ActionList = append(ActionList, Action{methodName, cmdList})
+	ActionList = append(ActionList, Action{methodName, cmdList, map[string]interface{}{}})
 	//for i := range ActionList {
 	//	fmt.Println(i)
 	//}
@@ -40,13 +40,14 @@ func actionHandler(d Ast, m *stmt.ClassMethod, w walker.Walker) bool {
 
 func classHandler(d Ast, m *stmt.Class, w walker.Walker) bool {
 	//className := (m.ClassName.Attributes()["Value"]).(string)
-	ActionList = append(ActionList, Action{"INIT", parser.RunPhpDocParser(m.PhpDocComment)})
+	ActionList = append(ActionList, Action{"INIT", parser.RunPhpDocParser(m.PhpDocComment), map[string]interface{}{}})
 	return false
 }
 
 type Action struct {
 	ActionName string
 	Cmds map[string]parser.Cmd
+	FieldsDescription map[string]interface{}
 }
 
 

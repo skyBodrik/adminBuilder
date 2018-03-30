@@ -31,7 +31,7 @@ func RunPhpDocParser(strPhpDoc string) map[string]Cmd {
 	r4, _ := regexp.Compile(`(?m:\s)`)
 	r5, _ := regexp.Compile(`(?m:[,;]` + END_OF_STR_CHARACTERS + `)`)
 	r6, _ := regexp.Compile(`(?m:\{)`)
-	r7, _ := regexp.Compile(`(?m:(\w*)\:\s*([\"\d\[\{]))`)
+	//r7, _ := regexp.Compile(`(?m:(\w+)\:\s*([\"\d\[\{]))`)
 	r8, _ := regexp.Compile(`(?m:[,\s]+)`)
 	var list = map[string]Cmd{}
 	for _, group := range listCmdGroups {
@@ -48,9 +48,10 @@ func RunPhpDocParser(strPhpDoc string) map[string]Cmd {
 				if len(partsOfParams) >= 2 {
 					h.Write([]byte(parts[0] + ":" + partsOfParams[0]))
 					hashKey := h.Sum(nil)
-					partsOfParams[1] = r7.ReplaceAllString(partsOfParams[1], "\"$1\": $2")
+					//partsOfParams[1] = r7.ReplaceAllString(partsOfParams[1], "\"$1\": $2")
 					var params interface{}
 					json.Unmarshal([]byte("{\"_fieldName\": \"" + partsOfParams[0] + "\", " + partsOfParams[1]), &params)
+					fmt.Println(params)
 					list[hex.EncodeToString(hashKey)] = Cmd{
 						Name:   parts[0],
 						Params: params,

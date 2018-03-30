@@ -1,55 +1,15 @@
-{{define "table"}}
-    {{ if ._isAction }}
-        <!-- /.row -->
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        {{ .caption }}
-                    </div>
-                    <!-- /.panel-heading -->
-                    <div class="panel-body">
-    {{end}}
-                        <table width="100%" class="table table-striped table-bordered table-hover" id="{{ ._fullFieldName }}">
-                            <thead>
-                            <tr>
-                                {{ range $key, $value := ._columnTitles }}
-                                    <th>{{ $value }}</th>
-                                {{end}}
-                            </tr>
-                            </thead>
-                            <tbody class="dinamic-content">
+{{define "stories/table"}}
+    <table width="100%" class="table table-striped table-bordered table-hover" id="{{ ._fullFieldName }}">
+        <thead>
+        <tr>
+            {{ range $key, $value := ._columnTitles }}
+                <th>{{ $value }}</th>
+            {{end}}
+        </tr>
+        </thead>
+        <tbody class="dynamic-content">
 
-                            </tbody>
-                        </table>
-    {{ if ._isAction }}
-                    </div>
-                    <!-- /.panel-body -->
-                </div>
-                <!-- /.panel -->
-            </div>
-            <!-- /.col-lg-12 -->
-        </div>
-        <script>
-            $(function() {
-                let fieldsDescription = {{ JSON ._fieldsDescription }};
-                $.ajax({
-                    url: "{{ URL ._initUrl }}",
-                    method: "POST",
-                    data: Url.getQuery(location.href),
-                    dataType: "json",
-                    success: function(data) {
-                        if (data['status'] === null) {
-                            var buff = transformToHtml(data['data']['{{ ._fieldName }}'], '{{ ._fullFieldName }}', fieldsDescription);
-                            $('#{{ ._fullFieldName }} > .dinamic-content').append(buff);
-                            $('#{{ ._fullFieldName }}').DataTable({
-                                responsive: true,
-                            });
-                        }
-                        console.log(data);
-                    }
-                });
-            });
-        </script>
-    {{end}}
+        </tbody>
+    </table>
+    {{template "core/table" .}}
 {{end}}

@@ -1,0 +1,8 @@
+{{define "core/select"}}
+<script>
+    $(function () {
+        let selector = "select#{{ ._id }}";
+        $(selector).val($(selector).data('value'));
+    });
+</script>
+{{end}}

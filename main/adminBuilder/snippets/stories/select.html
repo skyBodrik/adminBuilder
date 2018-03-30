@@ -1,7 +1,8 @@
-{{define "select"}}
-    <select id="{{ ._id }}" class="form-control">
+{{define "stories/select"}}
+    <select id="{{ ._id }}" data-value="{{ ._value }}" class="form-control">
         {{ range $key, $value := .values }}
             <option value="{{ $key }}">{{ $value }}</option>
         {{end}}
     </select>
+    {{template "core/select" .}}
 {{end}}
