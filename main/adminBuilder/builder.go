@@ -14,12 +14,15 @@ import (
 )
 
 func Run()  {
-	fdInput, _ := os.Open("/home/bodrik/repo/fotostrana/fotostrana/App/Story/Admin/Controller/SpringX.php")//"/root/GolandProjects/adminBuilder/main/example/Tropic.php")
-	fileInfo, _ := fdInput.Stat()
-	var encode, output string
+	var encode, output, input string
 	flag.StringVar(&encode, "encode", "utf-8", "a string var")
 	flag.StringVar(&output, "output", "output", "a string var")
+	flag.StringVar(&input, "input", "input", "a string var")
 	flag.Parse()
+	fmt.Println("Source: " + input)
+	fmt.Println("Destination: " + output)
+	fdInput, _ := os.Open(input)//"/root/GolandProjects/adminBuilder/main/example/Tropic.php")
+	fileInfo, _ := fdInput.Stat()
 	var rawData []byte
 	var err error
 	switch encode {

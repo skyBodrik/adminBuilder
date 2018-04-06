@@ -20,7 +20,7 @@ import (
 )
 
 // Служебные константы
-const TEMP_FOLDER = "temp/"
+const TEMP_FOLDER = "temp"
 
 const DEFAULT_SECTION_NAME = "Без группировки"
 const CUSTOM_SECTION_NAME = "Ссылки"
@@ -79,8 +79,7 @@ func (b *Builder)Build(v visitor.Ast) {
 	actionList := v.GetActionList()
 	bodyContent := bytes.Buffer{}
 	pageContent := bytes.Buffer{}
-	outputFileName := b.OutputPath + "/" + b.PageName + ".html"
-	tempFileName := TEMP_FOLDER + "/" + b.PageName + ".html"
+	outputFileName := b.OutputPath //+ "/" + b.PageName + ".html"
 
 	// Функции доступные в шаблоне
 	funcMap := template.FuncMap{
@@ -136,10 +135,12 @@ func (b *Builder)Build(v visitor.Ast) {
 	fmt.Println(tpl.ExecuteTemplate(&pageContent, b.SnippetsSet + "/" + MAIN_SNIPPET, params))
 	pageContent.WriteString("{{end}}")
 
+	tempFileName := TEMP_FOLDER + "/" + b.PageName + ".html"
 	// Теперь собираем всю страницу, сохраняем во временный файл
 	outfileTemp, _ := os.Create(tempFileName)
 	tpl = template.Must(tpl.Parse(pageContent.String()))
 	fmt.Println(tpl.ExecuteTemplate(outfileTemp, "core/main", params))
+	//fmt.Println(tempFileName)
 	defer outfileTemp.Close()
 
 	// Кодируем как нам надо и сохраняем в целевой файл

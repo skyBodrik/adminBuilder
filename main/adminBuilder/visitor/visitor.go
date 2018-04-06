@@ -15,7 +15,7 @@ import (
 
 var ActionList = []Action{}
 
-func isWalkerImplementsNodeInterface(w walker.Walker) bool {
+func isWalkerImplementsNodeInterface(w walker.Walkable) bool {
 	switch w.(type) {
 	case node.Node:
 		return true
@@ -25,7 +25,7 @@ func isWalkerImplementsNodeInterface(w walker.Walker) bool {
 }
 
 
-func actionHandler(d Ast, m *stmt.ClassMethod, w walker.Walker) bool {
+func actionHandler(d Ast, m *stmt.ClassMethod, w walker.Walkable) bool {
 	//fmt.Println(m.MethodName)
 	r0, _ := regexp.Compile(`(Action$)`)
 	methodName := (m.MethodName.Attributes()["Value"]).(string)
@@ -38,7 +38,7 @@ func actionHandler(d Ast, m *stmt.ClassMethod, w walker.Walker) bool {
 	return false
 }
 
-func classHandler(d Ast, m *stmt.Class, w walker.Walker) bool {
+func classHandler(d Ast, m *stmt.Class, w walker.Walkable) bool {
 	//className := (m.ClassName.Attributes()["Value"]).(string)
 	ActionList = append(ActionList, Action{"INIT", parser.RunPhpDocParser(m.PhpDocComment), map[string]interface{}{}})
 	return false
@@ -60,7 +60,7 @@ type Ast struct {
 }
 
 // EnterNode is invoked at every node in heirerchy
-func (d Ast) EnterNode(w walker.Walker) bool {
+func (d Ast) EnterNode(w walker.Walkable) bool {
 	if !isWalkerImplementsNodeInterface(w) {
 		return false
 	}
@@ -102,7 +102,7 @@ func (d Ast) GetChildrenVisitor(key string) walker.Visitor {
 }
 
 // LeaveNode is invoked after node process
-func (d Ast) LeaveNode(n walker.Walker) {
+func (d Ast) LeaveNode(n walker.Walkable) {
 	// do nothing
 }
 

@@ -1,8 +1,15 @@
 {{define "stories/select"}}
-    <select id="{{ ._id }}" data-value="{{ ._value }}" class="form-control">
-        {{ range $key, $value := .values }}
-            <option value="{{ $key }}">{{ $value }}</option>
-        {{end}}
-    </select>
-    {{template "core/select" .}}
+    {{ if ._withLoadDataScript }}
+    <div class="form-group">
+        <label style="{{ ifExists .labelStyle }}">{{ ifExists .caption }} </label>
+    {{ end }}
+        <select id="{{ ._id }}" data-value="{{ ._value }}" class="form-control" style="width: auto; display: inline-block;">
+            {{ range $key, $value := .values }}
+                <option value="{{ $key }}">{{ $value }}</option>
+            {{end}}
+        </select>
+        {{template "core/select" .}}
+    {{ if ._withLoadDataScript }}
+        </div>
+    {{ end }}
 {{end}}
