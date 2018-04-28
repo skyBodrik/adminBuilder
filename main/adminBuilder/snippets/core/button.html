@@ -98,5 +98,10 @@
             }
         }
     });
+    {{ if ._withLoadDataScript }}
+            $(function () {
+                adminBuilder.setActionLoadingStatus('{{ ._actionName }}', true);
+            });
+    {{ end }}
 </script>
 {{end}}

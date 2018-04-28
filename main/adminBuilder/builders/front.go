@@ -301,6 +301,7 @@ func (b *Builder)renderAction(action visitor.Action, t *template.Template, write
 					b.ObjectIdCounters[fullName]++
 				}
 				action.Cmds[hashKey].Params.(map[string]interface{})["_fullFieldName"] = fullName + "-" + strconv.Itoa(b.ObjectIdCounters[fullName]) + ""
+				action.Cmds[hashKey].Params.(map[string]interface{})["_id"] = action.Cmds[hashKey].Params.(map[string]interface{})["_fullFieldName"]
 				fields, ok := p1.(map[string]interface{})["fields"]
 				if ok && fields != nil {
 					columnTitles := map[string]string{}

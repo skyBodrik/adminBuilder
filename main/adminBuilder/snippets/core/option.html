@@ -1,0 +1,12 @@
+{{define "core/option"}}
+<script>
+    $(function () {
+        let selector = "#{{ ._id }}";
+        let activeOption = $("input[name='{{ ._id }}'][value='" + $(selector).val() + "']");
+        activeOption.prop('checked', true);
+        $("input[name='{{ ._id }}']").on('click', function () {
+            $(selector).val($(this).val());
+        });
+    });
+</script>
+{{end}}

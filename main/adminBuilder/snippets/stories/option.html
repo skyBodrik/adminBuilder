@@ -1,0 +1,16 @@
+{{define "stories/option"}}
+    {{ if ._withLoadDataScript }}
+    <div class="form-group">
+        <label style="{{ ifExists .labelStyle }}">{{ ifExists .caption }} </label>
+    {{ end }}
+        <input type="hidden" id="{{ ._id }}" value="{{ ._value }}">
+        {{ range $key, $value := .values }}
+            <label class="radio-inline">
+                <input type="radio" value="{{ $key }}" name="{{ $._id }}">{{ $value }}
+            </label>
+        {{end}}
+        {{template "core/option" .}}
+    {{ if ._withLoadDataScript }}
+        </div>
+    {{ end }}
+{{end}}
