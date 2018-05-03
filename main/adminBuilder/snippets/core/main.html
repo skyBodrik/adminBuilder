@@ -243,6 +243,23 @@
         }
 
         let adminBuilder = new AdminBuilder();
+
+        /**
+         * JS обработчики
+         */
+        adminBuilder.jsHandlers = {
+            'timeMachine': function (dateTimeFieldId) {
+                let time = $('#' + dateTimeFieldId).val();
+                if (time.length) {
+                    var minutes = 60; // Время хранения кук
+                    $.cookie('time_machine', time, {expires: minutes * 60 * 1000, path: '/'});
+                    alert('Машина времени активирована');
+                } else {
+                    $.removeCookie('time_machine', {path: '/'});
+                    alert('Машина времени деактивирована');
+                }
+            },
+        }
     </script>
     {{template "pageContent" .}}
 {{end}}

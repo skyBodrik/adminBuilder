@@ -2,9 +2,6 @@
     {{ if ._withLoadDataScript }}
     <script>
         $(function() {
-            /*                adminBuilder.setDataHandler('{{ ._fullFieldName }}', function () {
-                        return "test";
-                    });*/
 
             adminBuilder.setActionUpdateDataHandler('{{ ._actionName }}', function () {
                 let fieldsDescription = {{ JSON ._fieldsDescription }};

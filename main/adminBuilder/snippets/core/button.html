@@ -80,9 +80,9 @@
                     });
                     break;
                 case 'jsHandler':
-                    if (adminBuilder.jsHandlers.hasOwnProperty('{{ ._fullFieldName }}')) {
+                    if (adminBuilder.jsHandlers.hasOwnProperty('{{ .handler }}')) {
                         let ids = adminBuilder.getFullIdsForFieldsByButtonId(fields, $(this).attr('id'))
-                        adminBuilder.jsHandlers['{{ ._fullFieldName }}'](...Object.values(ids));
+                        adminBuilder.jsHandlers['{{ .handler }}'](...Object.values(ids));
                     }
                     break;
                 case 'link':

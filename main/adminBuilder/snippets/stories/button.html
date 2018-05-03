@@ -1,19 +1,4 @@
 {{define "stories/button"}}
     <button type="button" id="{{ ._id }}" name="{{ ._fieldName }}" class="btn {{if eq (ifExists .confirm) ""}}btn-default{{else}}btn-warning{{end}}">{{ .caption }}</button>
-    <script>
-        {{ if eq .type "jsHandler" }}
-            adminBuilder.jsHandlers['{{ ._fullFieldName }}'] = function (dateTimeFieldId) {
-                let time = $('#' + dateTimeFieldId).val();
-                if (time.length) {
-                    var minutes = 60; // Время хранения кук
-                    $.cookie('time_machine', time, { expires: minutes * 60 * 1000, path: '/'});
-                    alert('Машина времени активирована');
-                } else {
-                    $.removeCookie('time_machine', { path: '/'});
-                    alert('Машина времени деактивирована');
-                }
-            }
-        {{end}}
-    </script>
     {{template "core/button" .}}
 {{end}}
