@@ -30,7 +30,12 @@
                             var buff = adminBuilder.transformToHtml(data, '{{ ._fullFieldName }}', fieldsDescription);
                             $('#{{ ._fullFieldName }} > .dynamic-content').empty();
                             $('#{{ ._fullFieldName }} > .dynamic-content').append(buff);
-                            $('#{{ ._fullFieldName }} > .dynamic-content .tab-pane:first').addClass("active in");
+                            let menuItem = $('#{{ ._fullFieldName }} > .nav .active>a');
+                            if (menuItem.length) {
+                                $('#{{ ._fullFieldName }} > .dynamic-content ' + menuItem.attr('href')).addClass("active in");
+                            } else {
+                                $('#{{ ._fullFieldName }} > .dynamic-content .tab-pane:first').addClass("active in");
+                            }
                             adminBuilder.setActionLoadingStatus('{{ ._actionName }}', true);
                         } else { // Неудача
                             console.log(data);
