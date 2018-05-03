@@ -27,7 +27,7 @@ func RunPhpDocParser(strPhpDoc string) map[string]Cmd {
 	r2, _ := regexp.Compile(`(?m:@adminBuilder(.*?);` + END_OF_STR_CHARACTERS + `)`)
 	listCmdGroups := r2.FindAllString(strPhpDoc, -1)
 
-	r3, _ := regexp.Compile(`(?m:\s+[^\s]*\s*(.*?)[,;]` + END_OF_STR_CHARACTERS + `)`)
+	r3, _ := regexp.Compile(`(?m:\s+[^\s]*\s*(.*?)` + END_OF_STR_CHARACTERS + `)`)
 	r4, _ := regexp.Compile(`(?m:\s)`)
 	r5, _ := regexp.Compile(`(?m:[,;]` + END_OF_STR_CHARACTERS + `)`)
 	r6, _ := regexp.Compile(`(?m:\{)`)
