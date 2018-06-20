@@ -9,6 +9,16 @@
             this.jsHandlers = {};
             this.eventHandlers = {};
             this.actionUpdateDataHandlers = {};
+            this.fieldsForShown = {
+                {{ range $fieldName, $content := .shownFields }}
+                    '{{ $fieldName }}': "{{ $content }}",
+                {{end}}
+            };
+            this.samples = {
+                {{ range $fieldName, $content := .templatesList }}
+                    '{{ $fieldName }}': "{{ JSEscape $content }}",
+                {{end}}
+            };
 
             this.setDataHandler = function(id, callback) {
                 this.dataHandlerStorage[id] = callback;
@@ -20,8 +30,19 @@
             
             this.setActionLoadingStatus = function (actionName, status) {
                 this.actionLoadingStatuses[actionName] = status;
-                if (status == true && this.isAllActionLoaded() && this.eventHandlers['allActionLoadedHandler'] instanceof Object) {
-                    this.eventHandlers['allActionLoadedHandler']();
+                if (status) {
+                    if (this.eventHandlers.hasOwnProperty(actionName)) {
+                        let handlers = this.eventHandlers[actionName];
+                        for (let i in handlers) {
+                            handlers[i]();
+                        }
+                    }
+                    if (this.isAllActionLoaded() && this.eventHandlers['allActionLoadedHandler'] instanceof Object) {
+                        let generalHandlers = this.eventHandlers['allActionLoadedHandler'];
+                        for (let i in generalHandlers) {
+                            generalHandlers[i]();
+                        }
+                    }
                 }
             }
 
@@ -37,8 +58,11 @@
             }
 
 
-            this.setAllActionLoadedHandler = function (handler) {
-                this.eventHandlers['allActionLoadedHandler'] = handler;
+            this.addAllActionLoadedHandler = function (handler) {
+                if (!this.eventHandlers.hasOwnProperty('allActionLoadedHandler')) {
+                    this.eventHandlers['allActionLoadedHandler'] = [];
+                }
+                this.eventHandlers['allActionLoadedHandler'].push(handler);
             }
 
             this.isAllActionLoaded = function () {
@@ -109,7 +133,8 @@
                 return fieldsIds;
             }
 
-            this.transformToHtml = function(data, fullId, fieldsDescription) {
+            this.transformToHtml = function(data, fullId, fieldsDescription, withLoadDataScript) {
+                withLoadDataScript = withLoadDataScript || false;
                 let transformOutput = '';
                 let regex = new RegExp(/^([^_]+).*?([^_]+)\-(\d+)$/i);
                 let actionName = regex.exec(fullId)[1];
@@ -136,7 +161,7 @@
                                     }
                                     let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
                                     this.idCounters[partOfId]++;
-                                    items.push(this.transformToHtml(data[key][key3], newFullId, fieldsDescription));
+                                    items.push(this.transformToHtml(data[key][key3], newFullId, fieldsDescription, withLoadDataScript));
                                 }
                                 transformOutput += items.join(' / ');
                             } else {
@@ -146,7 +171,7 @@
                                 }
                                 let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
                                 this.idCounters[partOfId]++;
-                                transformOutput += this.transformToHtml(data[key][key2], newFullId, fieldsDescription);
+                                transformOutput += this.transformToHtml(data[key][key2], newFullId, fieldsDescription, withLoadDataScript);
                             }
                             transformOutput += '</td>';
                         }
@@ -168,7 +193,7 @@
                                 }
                                 let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
                                 this.idCounters[partOfId]++;
-                                items.push(this.transformToHtml(data[key2], newFullId, fieldsDescription));
+                                items.push(this.transformToHtml(data[key2], newFullId, fieldsDescription, withLoadDataScript));
                             }
                             transformOutput += items.join(' ');
                         } else {
@@ -179,9 +204,9 @@
                             let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
                             this.idCounters[partOfId]++;
                             if (data.hasOwnProperty(key)) {
-                                transformOutput += this.transformToHtml(data[key], newFullId, fieldsDescription);
+                                transformOutput += this.transformToHtml(data[key], newFullId, fieldsDescription, withLoadDataScript);
                             } else {
-                                transformOutput += this.transformToHtml(data, newFullId, fieldsDescription);
+                                transformOutput += this.transformToHtml(data, newFullId, fieldsDescription, withLoadDataScript);
                             }
                         }
                         transformOutput += '</div>';
@@ -199,33 +224,38 @@
                         let newFullId = partOfId + '-' + this.idCounters[partOfId] + '';
                         this.idCounters[partOfId]++;
                         if (data.hasOwnProperty(key)) {
-                            transformOutput += this.transformToHtml(data[key], newFullId, fieldsDescription);
+                            let newId = regex.exec(newFullId)[2];
+                            if (fieldsDescription[newId] !== undefined && fieldsDescription[newId]['type'] == 'array') {
+                                let cachedSnippedKey = fieldsDescription[newId]['_fullFieldName'];
+                                transformOutput += this.samples[cachedSnippedKey].replace(new RegExp('\\{\\{\\s*\\._value_' + actionNameAndId + '\\s*\\}\\}', 'ig'), data)
+                                        .replace(new RegExp('\\{\\{\\s*\\._id_' + actionNameAndId + '\\s*\\}\\}', 'ig'), fullId)
+                                        .replace(new RegExp('<tbody class="dynamic-content">', 'igm'), '<tbody class="dynamic-content">' + this.transformToHtml(data[key], newFullId, fieldsDescription, false));
+                                adminBuilder.addAllActionLoadedHandler(() => {
+                                    if ($('#' + cachedSnippedKey).DataTable()) {
+                                        $('#' + cachedSnippedKey).DataTable().draw();
+                                    } else {
+                                        $('#' + cachedSnippedKey).DataTable({
+                                            responsive: true,
+                                        });
+                                    }
+                                });
+                            } else {
+                                transformOutput += this.transformToHtml(data[key], newFullId, fieldsDescription, withLoadDataScript);
+                            }
                         } else {
-                            transformOutput += this.transformToHtml(data, newFullId, fieldsDescription);
+                            transformOutput += this.transformToHtml(data, newFullId, fieldsDescription, withLoadDataScript);
                         }
                         transformOutput += '</div>';
                     }
-                } else /*if (data instanceof Object) {
-                    for (let key in data) {
-                        let partOfId = fullId + '_' + key;
-                        if (typeof this.idCounters[partOfId] === 'undefined') {
-                            this.idCounters[partOfId] = 0;
-                        }
-                        let newFullId = partOfId + '-' + this.idCounters[partOfId];
-                        transformOutput += this.transformToHtml(data[key], newFullId, fieldsDescription);
-                    }
-                } else */{
-                    let cachedSnippedKey = (fieldsDescription[id]['_withLoadDataScript'] ? 'withLoadDataScript:' : '') + fieldsDescription[id]['_fullFieldName'];
-                    switch (cachedSnippedKey) {
-                    {{ range $fieldName, $content := .templatesList }}
-                        case '{{ $fieldName }}':
-                            //transformOutput += "{{ JSEscape $content }}".replace(/\{\{\s*\.\_value\s*\}\}/ig, data).replace(/\{\{\s*\.\_id\s*\}\}/ig, fullId);
-                            transformOutput += "{{ JSEscape $content }}".replace(new RegExp('\\{\\{\\s*\\._value_' + actionNameAndId + '\\s*\\}\\}', 'ig'), data)
-                                    .replace(new RegExp('\\{\\{\\s*\\._id_' + actionNameAndId + '\\s*\\}\\}', 'ig'), fullId);
-                            break;
-                    {{end}}
-                        default:
-                            transformOutput += data;
+                } else {
+                    //let cachedSnippedKey = (fieldsDescription[id]['_withLoadDataScript'] ? 'withLoadDataScript:' : '') + fieldsDescription[id]['_fullFieldName'];
+                    //let cachedSnippedKey = (this.fieldsForShown.hasOwnProperty(fieldsDescription[id]['_fullFieldName']) ? 'withLoadDataScript:' : '') + fieldsDescription[id]['_fullFieldName'];
+                    let cachedSnippedKey = (withLoadDataScript ? 'withLoadDataScript:' : '') + fieldsDescription[id]['_fullFieldName'];
+                    if (this.samples.hasOwnProperty(cachedSnippedKey)) {
+                        transformOutput += this.samples[cachedSnippedKey].replace(new RegExp('\\{\\{\\s*\\._value_' + actionNameAndId + '\\s*\\}\\}', 'ig'), data)
+                                .replace(new RegExp('\\{\\{\\s*\\._id_' + actionNameAndId + '\\s*\\}\\}', 'ig'), fullId);
+                    } else {
+                        transformOutput += data;
                     }
                 }
                 return transformOutput;

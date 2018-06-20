@@ -72,7 +72,7 @@
             {{template "bodyContent" .}}
         </div>
         <script>
-            adminBuilder.setAllActionLoadedHandler(function () {
+            adminBuilder.addAllActionLoadedHandler(function () {
                 $('#page-wrapper').fadeIn();
             });
         </script>

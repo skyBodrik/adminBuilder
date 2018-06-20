@@ -49,6 +49,7 @@ func Run()  {
 		Charset: "utf-8",
 	}
 	builder.Build(visitor)
+	fmt.Println("Done")
 	//fmt.Println(visitor.GetActionList())
 
 }

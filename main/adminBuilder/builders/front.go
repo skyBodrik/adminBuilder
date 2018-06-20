@@ -8,9 +8,8 @@ import (
 	"encoding/hex"
 	"io"
 	"text/template"
-	"log"
 	"io/ioutil"
-	"github.com/s-yata/go-iconv"
+	"golang.org/x/text/encoding/charmap"
 	"encoding/json"
 	"bytes"
 	"reflect"
@@ -63,6 +62,7 @@ type Builder struct {
 	PageCaption      string
 	PageName         string
 	Charset          string
+	ShownFields		 map[string]bool
 	TemplatesList    map[string]string
 	ObjectIdCounters map[string]int
 	MenuSections     map[string]map[string]string
@@ -73,6 +73,7 @@ type Builder struct {
  */
 func (b *Builder)Build(v visitor.Ast) {
 	// Инициализация
+	b.ShownFields = make(map[string]bool, 1)
 	b.TemplatesList = make(map[string]string, 1)
 	b.ObjectIdCounters = make(map[string]int, 1)
 	b.MenuSections = make(map[string]map[string]string, 1)
@@ -129,6 +130,7 @@ func (b *Builder)Build(v visitor.Ast) {
 		"pageCaption": b.PageCaption,
 		"pageCharset": b.Charset,
 		"templatesList": b.TemplatesList,
+		"shownFields": b.ShownFields,
 		"menuSections": b.MenuSections,
 	}
 	pageContent.WriteString("{{define \"pageContent\"}}")
@@ -144,15 +146,16 @@ func (b *Builder)Build(v visitor.Ast) {
 	defer outfileTemp.Close()
 
 	// Кодируем как нам надо и сохраняем в целевой файл
-	h, err := iconv.Open(b.Charset, "UTF-8")
-	if err != nil {
-		log.Fatalf("iconv.Open failed: %v", err)
-	}
-	defer h.Close()
 	outfile, _ := os.Create(outputFileName)
 	data, _ := ioutil.ReadFile(tempFileName)
-	newData, _ := h.Conv(data)
-	outfile.Write(newData)
+	var newData string
+	switch b.Charset {
+	case "windows-1251":
+		newData, _ = charmap.Windows1251.NewEncoder().String(string(data))
+	default:
+		newData = string(data)
+	}
+	outfile.Write([]byte(newData))
 	defer outfile.Close()
 }
 
@@ -207,6 +210,35 @@ func (b *Builder)renderAction(action visitor.Action, t *template.Template, write
 		case CMD_FIELD:
 			var p0 interface{} = cmd.Params
 			var fullFieldName = action.ActionName + "_" + p0.(map[string]interface{})["_fieldName"].(string)
+			fields, ok := p0.(map[string]interface{})["fields"]
+			if ok && fields != nil {
+				columnTitles := map[string]string{}
+				columnTitlesArray := []string{}
+				//fields = append(fields.([]interface{}), fieldName)
+				var p2 interface{} = fields
+				for _, field := range p2.([]interface{}) {
+					if reflect.TypeOf(field).String() == "[]interface {}" {
+						var titles []string
+						for _, subField := range field.([]interface{}) {
+							h := md5.New()
+							h.Write([]byte(CMD_FIELD + ":" + subField.(string)))
+							hashKey2 := hex.EncodeToString(h.Sum(nil))
+							var p3 interface{} = action.Cmds[hashKey2].Params
+							columnTitles[hashKey2] = p3.(map[string]interface{})[PROP_CAPTION].(string)
+							titles = append(titles, columnTitles[hashKey2])
+						}
+						columnTitlesArray = append(columnTitlesArray, strings.Join(titles, " / "))
+					} else {
+						h := md5.New()
+						h.Write([]byte(CMD_FIELD + ":" + field.(string)))
+						hashKey2 := hex.EncodeToString(h.Sum(nil))
+						var p3 interface{} = action.Cmds[hashKey2].Params
+						columnTitles[hashKey2] = p3.(map[string]interface{})[PROP_CAPTION].(string)
+						columnTitlesArray = append(columnTitlesArray, columnTitles[hashKey2])
+					}
+				}
+				p0.(map[string]interface{})["_columnTitles"] = columnTitlesArray
+			}
 			buffer := bytes.Buffer{}
 			p0.(map[string]interface{})["_initUrl"] = b.RequestUrl + action.ActionName + b.QueryString
 			p0.(map[string]interface{})["_withLoadDataScript"] = false
@@ -220,7 +252,8 @@ func (b *Builder)renderAction(action visitor.Action, t *template.Template, write
 			p0.(map[string]interface{})["_withLoadDataScript"] = true
 			buffer = bytes.Buffer{}
 			t.ExecuteTemplate(&buffer, b.SnippetsSet + "/" + p0.(map[string]interface{})["snippet"].(string), cmd.Params)
-			b.TemplatesList["withLoadDataScript:" + fullFieldName] = buffer.String()
+			var temp = buffer.String();
+			b.TemplatesList["withLoadDataScript:" + fullFieldName] = temp
 			action.FieldsDescription[p0.(map[string]interface{})["_fieldName"].(string)] = p0.(map[string]interface{})
 			//fmt.Println(buffer.String())
 		case CMD_ACTION:
@@ -267,6 +300,11 @@ func (b *Builder)renderAction(action visitor.Action, t *template.Template, write
 			}
 		case CMD_FIELDS_FOR_DISPLAY:
 			actionNeedRender = true
+			var p0 interface{} = cmd.Params
+			for _, fieldName := range p0.([]string) {
+				var fullFieldName = action.ActionName + "_" + fieldName
+				b.ShownFields[fullFieldName] = true;
+			}
 		case CMD_INPUT:
 			//var p0 interface{} = cmd.Params
 			//for _, fieldId := range p0.([]string) {

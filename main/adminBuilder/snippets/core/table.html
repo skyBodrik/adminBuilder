@@ -27,7 +27,7 @@
                     success: function (data) {
                         data = data['data'];
                         if (data[adminBuilder.RESPONSE_FIELD] === undefined || data[adminBuilder.RESPONSE_FIELD]['status'] === undefined || data[adminBuilder.RESPONSE_FIELD]['status'] != 1) { // Успех
-                            var buff = adminBuilder.transformToHtml(data['{{ ._fieldName }}'], '{{ ._fullFieldName }}', fieldsDescription);
+                            var buff = adminBuilder.transformToHtml(data['{{ ._fieldName }}'], '{{ ._fullFieldName }}', fieldsDescription, false);
                             $('#{{ ._fullFieldName }} > .dynamic-content').empty();
                             $('#{{ ._fullFieldName }} > .dynamic-content').append(buff);
                             if ($('#{{ ._fullFieldName }}').DataTable()) {
@@ -37,10 +37,11 @@
                                     responsive: true,
                                 });
                             }
-                            adminBuilder.setActionLoadingStatus('{{ ._actionName }}', true);
                         } else { // Неудача
-                            //console.log(data);
+                            $('#{{ ._fullFieldName }}').html('<text style="color: #ff0000">Error: </text>' + data.adminBuilder.error);
+                            console.log(data);
                         }
+                        adminBuilder.setActionLoadingStatus('{{ ._actionName }}', true);
                     }
                 });
             });
